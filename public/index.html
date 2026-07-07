@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sitcom Shuffle — Configure</title>
+  <meta name="description" content="Configure your Sitcom Shuffle Stremio addon. Add your favorite TV shows and get one-click random top-rated episode playback.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <header class="hero">
+      <h1>🎲 Sitcom Shuffle</h1>
+      <p class="tagline">One click. Random top-rated episode. Instant play.</p>
+    </header>
+
+    <section class="card" id="aio-section">
+      <h2>1. AIOStreams URL</h2>
+      <p class="hint">Paste your AIOStreams manifest URL (the one you installed in Stremio).</p>
+      <input type="url" id="aio-url" placeholder="https://aiostreams.elfhosted.com/abc123/manifest.json" autocomplete="off">
+      <p class="error" id="aio-error"></p>
+    </section>
+
+    <section class="card" id="search-section">
+      <h2>2. Add TV Shows</h2>
+      <input type="search" id="search-input" placeholder="Search for a TV show..." autocomplete="off">
+      <div id="search-results" class="results-grid"></div>
+    </section>
+
+    <section class="card" id="favorites-section">
+      <h2>3. My Sitcoms <span class="badge" id="show-count">0</span></h2>
+      <div id="favorites-list" class="favorites-grid">
+        <p class="empty-state" id="empty-state">No shows added yet. Search above to add your favorites!</p>
+      </div>
+    </section>
+
+    <section class="card action-card" id="install-section">
+      <h2>4. Install Addon</h2>
+      <button id="install-btn" class="btn-primary" disabled>Generate Install Link</button>
+      <div id="install-output" class="install-output hidden">
+        <p>Your addon is ready! Click below to install:</p>
+        <a id="install-link" class="btn-install" href="#" target="_blank">🚀 Install in Stremio</a>
+        <div class="url-box">
+          <input type="text" id="install-url" readonly>
+          <button id="copy-btn" class="btn-copy">Copy</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
