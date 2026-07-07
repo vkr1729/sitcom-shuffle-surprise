@@ -1,0 +1,7 @@
+# AI Agent Workflows State
+.claude.md
+.agents/
+implementation_plan.md
+success_criteria.md
+.plan_state.json
+.bugfix_plan.md
