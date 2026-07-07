@@ -42,7 +42,7 @@ app.get('/:config/manifest.json', (req, res) => {
     version: '1.0.0',
     description: 'One-click random top-rated episode of your favorite sitcoms.',
     logo: 'https://images.metahub.space/logo/medium/tt0898266/img.png',
-    resources: ['catalog', 'stream'],
+    resources: ['catalog', 'meta', 'stream'],
     types: ['movie'],
     catalogs: [
       {
@@ -64,6 +64,29 @@ app.get('/:config/catalog/movie/sitcom_shuffle_catalog.json', (req, res) => {
     poster: `https://images.metahub.space/poster/medium/${show.id}/img`,
   }));
   res.json({ metas });
+});
+
+// Meta handler — provides show details when Stremio opens the item page
+app.get('/:config/meta/movie/:id.json', (req, res) => {
+  const rawId = req.params.id;
+  if (!rawId.startsWith('shuffle:')) {
+    return res.json({ meta: null });
+  }
+  const imdbId = rawId.replace('shuffle:', '');
+  const show = req.addonConfig.shows.find((s) => s.id === imdbId);
+  if (!show) {
+    return res.json({ meta: null });
+  }
+  res.json({
+    meta: {
+      id: rawId,
+      type: 'movie',
+      name: `${show.name} (Shuffle)`,
+      poster: `https://images.metahub.space/poster/medium/${imdbId}/img`,
+      background: `https://images.metahub.space/background/medium/${imdbId}/img`,
+      description: `Click play to watch a random top-rated episode of ${show.name}. A new episode is picked every time!`,
+    },
+  });
 });
 
 // Stream handler
