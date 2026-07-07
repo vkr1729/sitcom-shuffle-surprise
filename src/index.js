@@ -2,7 +2,9 @@
 'use strict';
 const express = require('express');
 const path = require('path');
+const fetch = require('node-fetch');
 const { decodeConfig } = require('./config');
+const { pickRandomEpisode } = require('./tvmaze');
 
 const app = express();
 
@@ -50,6 +52,68 @@ app.get('/:config/manifest.json', (req, res) => {
       },
     ],
   });
+});
+
+// Catalog handler
+app.get('/:config/catalog/movie/sitcom_shuffle_catalog.json', (req, res) => {
+  const { shows } = req.addonConfig;
+  const metas = shows.map((show) => ({
+    id: `shuffle:${show.id}`,
+    type: 'movie',
+    name: `${show.name} (Shuffle)`,
+    poster: `https://images.metahub.space/poster/medium/${show.id}/img`,
+  }));
+  res.json({ metas });
+});
+
+// Stream handler
+app.get('/:config/stream/movie/:id.json', async (req, res) => {
+  try {
+    const { aio } = req.addonConfig;
+    const rawId = req.params.id;
+
+    // Extract IMDb ID from "shuffle:ttXXXXXXX"
+    if (!rawId.startsWith('shuffle:')) {
+      return res.json({ streams: [] });
+    }
+    const imdbId = rawId.replace('shuffle:', '');
+
+    // Pick a random top-rated episode
+    const episode = await pickRandomEpisode(imdbId);
+    const s = episode.season;
+    const e = episode.number;
+    const epLabel = `S${String(s).padStart(2, '0')}E${String(e).padStart(2, '0')}`;
+
+    // Query AIOStreams for that specific episode
+    const aioUrl = `${aio}/stream/series/${imdbId}:${s}:${e}.json`;
+    const aioRes = await fetch(aioUrl);
+
+    if (!aioRes.ok) {
+      console.error(`AIOStreams returned ${aioRes.status} for ${aioUrl}`);
+      return res.json({
+        streams: [
+          {
+            name: `[Shuffle] ${epLabel}`,
+            title: `${episode.name} (★${episode.rating})\nNo streams found — try again`,
+            externalUrl: `https://www.imdb.com/title/${imdbId}/`,
+          },
+        ],
+      });
+    }
+
+    const aioData = await aioRes.json();
+    const streams = (aioData.streams || []).map((stream) => ({
+      ...stream,
+      name: `[Shuffle] ${epLabel} | ${stream.name || ''}`,
+      title: `${episode.name} (★${episode.rating})\n${stream.title || ''}`,
+    }));
+
+    // cacheMaxAge: 0 ensures Stremio re-randomizes on every click
+    res.json({ streams, cacheMaxAge: 0 });
+  } catch (err) {
+    console.error('Stream handler error:', err.message);
+    res.json({ streams: [] });
+  }
 });
 
 const PORT = process.env.PORT || 3000;
