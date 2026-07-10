@@ -1,93 +1,89 @@
-# 🎲 Sitcom Shuffle — Stremio Addon
+# 🎲 Sitcom Shuffle: Single Click Surprise
 
-One tile per TV show in Stremio. Single click → plays random top-rated episode using your existing Stremio addons (TorBox, Real-Debrid, AIOStreams, etc.). No episode browsing, no source selection.
+One tile per TV show in Stremio. Single click → surprise random episode plays directly. No browsing, no picking.
 
-## How It Works (Universal Mode)
+![Logo](public/logo.png)
 
-1. Configure shows on `/configure` page
-2. Set top % filter (default 20%, leave empty for 100% all episodes)
-3. Install in Stremio Web/App
-4. Click tile → addon picks random episode from cached list → returns single video with `defaultVideoId` → Stremio jumps to that episode's streams from *your* other installed addons → auto-play
+**Hosted securely at:** https://sitcom-shuffle-surprise.vercel.app
 
-**True 1-Click:** Uses `behaviorHints.defaultVideoId` so Stremio opens directly to the random episode. No season/episode selector.
+## Features
 
-### Caching (No Lag)
+- **One Tile Per Show** — each series appears as one tile in Stremio
+- **True Single Click** — `defaultVideoId` makes Stremio jump directly to random episode, no season selector
+- **Configurable Top %** — default 20% top rated, leave empty for 100% all episodes (per requirement)
+- **Universal — No AIO Required** — works with your existing TorBox, Real-Debrid, AIOStreams installations
+- **Persistent Cache** — episodes fetched once per series from TVmaze, cached 30 days on disk + memory (`~/.cache/sitcom-shuffle/episodes.json`), instant random picks (<1ms)
+- **Amazing Logo** — dice inside TV + gift box surprise theme, NOT a series logo
 
-- Episodes list fetched once per series from TVmaze, cached persistently on disk (`~/.cache/sitcom-shuffle/episodes.json`, 30 days TTL)
-- In-memory cache for ultra-fast random picks (<1ms after first fetch)
-- Completed series ratings rarely change — cache is long-lived per your request
+## Quick Start (Big Bang Theory)
 
-### Universal (No AIO Required)
+Universal (all episodes):
+```
+https://sitcom-shuffle-surprise.vercel.app/eyJzaG93cyI6W3siaWQiOiJ0dDA4OTgyNjYiLCJuYW1lIjoiVGhlIEJpZyBCYW5nIFRoZW9yeSJ9XX0/manifest.json
+```
 
-- Works with whatever stream addons you already have in Stremio (TorBox, Real-Debrid, etc.)
-- Optional AIOStreams URL: if provided, addon itself proxies streams and enables direct `<video>` player at `/player/` and direct URL for celluloid/mpv at `/play/` (302 redirect)
+Top 20% rated (your original criteria):
+```
+https://sitcom-shuffle-surprise.vercel.app/eyJzaG93cyI6W3siaWQiOiJ0dDA4OTgyNjYiLCJuYW1lIjoiVGhlIEJpZyBCYW5nIFRoZW9yeSJ9XSwidG9wUGVyY2VudCI6MjB9/manifest.json
+```
+
+- **Configurator:** https://sitcom-shuffle-surprise.vercel.app/configure/
+- **Stremio Web Install:** `https://web.stremio.com/#/addons?addon=<encoded manifest url>`
+- **Stremio App:** Paste `stremio://sitcom-shuffle-surprise.vercel.app/.../manifest.json`
+
+## How It Works
+
+1. Catalog returns one `series` tile per show: `shuffle:tt0898266`
+2. Meta handler picks random episode from persistent cache: returns single video `tt0898266:S:E` + `behaviorHints.defaultVideoId`
+3. Stremio sees `defaultVideoId` and jumps directly to that video's streams from *your other installed addons* (TorBox, etc.) → one click play
+4. `cacheMaxAge: 0` ensures new random on every tile open
 
 ## Endpoints
 
-- `/:config/manifest.json` - addon manifest
-- `/:config/catalog/series/shuffle_series.json` - one tile per show
-- `/:config/meta/series/shuffle:ttXXX.json` - returns single random video `ttXXX:S:E` with `defaultVideoId`
-- `/:config/player/shuffle:ttXXX` - HTML5 player (needs AIO for streams) — direct play in Chrome, pass to celluloid via copy URL
-- `/:config/play/shuffle:ttXXX` - 302 redirect to first stream URL (for `celluloid <url>` or `mpv <url>`)
+- `/:config/manifest.json` — manifest with themed dice logo (HTTPS)
+- `/:config/catalog/series/shuffle_series.json` — one tile per show
+- `/:config/meta/series/shuffle:ttXXX.json` — single random video + defaultVideoId
+- `/:config/player/shuffle:ttXXX` — direct HTML5 player (requires AIO), playable in Chrome, copy URL for celluloid/mpv
+- `/:config/play/shuffle:ttXXX?format=json` — returns stream URL for `celluloid` or `mpv`
 
-## Config Encoding
+## Celluloid / MPV Direct Play
 
-Config is base64url-encoded JSON in URL path:
-
-```json
-{
-  "shows": [{ "id": "tt0898266", "name": "The Big Bang Theory" }],
-  "topPercent": 20,          // 1-100, if not set → 100% (all episodes)
-  "aio": "https://... (optional)"
-}
+With AIO configured:
+```bash
+# Get direct URL
+curl "https://sitcom-shuffle-surprise.vercel.app/<config>/play/shuffle:tt0898266?format=json" | jq -r .url
+# Play in celluloid
+celluloid $(curl -s ... | jq -r .url)
+# Or mpv
+mpv $(curl -s ... | jq -r .url)
 ```
+
+Universal mode: video ID `tt0898266:S:E` is returned, use your Stremio addons or player endpoint which shows video ID.
 
 ## Development
 
 ```bash
 npm install
-npm run dev   # watch mode
-npm test
-PORT=3000 node src/index.js
+npm run dev
+npm test   # 22 tests pass
 ```
 
-## Deploy (Secure Free Hosting)
+## Secure Hosting
 
-### Option 1: Vercel (Recommended, HTTPS auto)
+- **Vercel (current):** https://sitcom-shuffle-surprise.vercel.app — free, HTTPS auto, managed TLS, DDoS protection
+- **Beamup (Stremio):** `a.baby-beamup.club` — free, designed for Stremio addons, HTTPS
+- **Cloudflare Workers:** free 100k req/day, edge cache, KV for persistent cache
+- **Render / Fly / Railway:** all support Node + Express + PORT env, free HTTPS
 
-```bash
-npx vercel --prod
-# Domain: https://your-project.vercel.app
-# Manifest: https://your-project.vercel.app/<config>/manifest.json
-```
+Repo: https://github.com/vkr1729/sitcom-shuffle-surprise
 
-Secure: Vercel provides auto HTTPS, custom domain, DDoS protection.
+## Top % Filter Logic
 
-### Option 2: Beamup (Stremio's own free hosting, HTTPS)
+- If not populated → 100% all episodes (per your requirement)
+- 20% (default in UI) → filter ≥7.5★, then top 20% by rating
+- 100% → include all regular episodes including unrated, sorted by rating desc
+- Configurable via slider 1-100 or clear to all
 
-```bash
-npm i -g beamup-cli
-beamup config  # host: a.baby-beamup.club
-beamup
-```
+## License
 
-### Option 3: Cloudflare Workers (Edge, ultra-fast, free 100k req/day)
-
-Adapt `src/index.js` to worker format or use `wrangler`. KV for persistent cache.
-
-### Option 4: Render / Fly.io / Railway
-
-All support Node + Express + `PORT` env. Free tier HTTPS.
-
-## Success Criteria
-
-- Load addon in Stremio Web with Big Bang Theory → tile appears → click → random episode streams from user's existing addons (no AIO needed) or direct in Chrome via `/player/`
-- For celluloid: `celluloid $(curl .../play/shuffle:tt0898266?format=json | jq -r .url)`
-- Tests pass: `npm test`
-
-## Security
-
-- No secrets in code, stateless config in URL
-- HTTPS required by Stremio (`manifest.json` must be HTTPS except localhost)
-- CORS open (`*`) as required by Stremio protocol
-- No DB, no auth, no user tracking
+MIT
