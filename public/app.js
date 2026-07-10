@@ -1,4 +1,4 @@
-// public/app.js v5 - Sitcom Surprise - no AIO, default examples
+// public/app.js - Sitcom Surprise
 'use strict';
 (function () {
   const searchInput = document.getElementById('search-input');
@@ -96,7 +96,7 @@
 
   function renderFavorites() {
     if (favorites.size === 0) {
-      favoritesList.innerHTML = '<p class="empty-state">No shows yet. Search above to add your favorites!<br><span style="font-size:0.85rem;opacity:0.8">Examples: Big Bang Theory, Silicon Valley, Friends — added by default, delete if you don\'t need them.</span></p>';
+      favoritesList.innerHTML = '<p class="empty-state">No shows yet. Search above to add your favorites!</p>';
       showCount.textContent = '0'; return;
     }
     showCount.textContent = favorites.size;
@@ -105,8 +105,7 @@
         <div class="poster-wrap">${show.poster ? `<img src="${show.poster}" alt="${escapeHtml(show.name)}" loading="lazy">` : '<div class="no-poster">No Image</div>'}</div>
         <div class="show-info"><span class="show-title">${escapeHtml(show.name)}</span></div>
         <button class="btn-remove" onclick="window.__addShow('${show.id}', '${escapeHtml(show.name).replace(/'/g, "\\'")}', '${show.poster}')">✕ Remove</button>
-      </div>`).join('') +
-      '<p class="hint" style="grid-column:1/-1;text-align:center;margin-top:0.5rem">Examples added by default — delete any you don\'t need.</p>';
+      </div>`).join('');
   }
 
   function updateInstallBtn() {

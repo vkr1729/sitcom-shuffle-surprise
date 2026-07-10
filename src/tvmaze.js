@@ -1,4 +1,4 @@
-// src/tvmaze.js v4 - persistent cache, no 7.5 filter, configurable top%
+// src/tvmaze.js - persistent cache, configurable top %
 'use strict';
 
 const fs = require('fs');
@@ -88,10 +88,9 @@ async function fetchAllEpisodes(tvmazeId) {
 }
 
 /**
- * Filter episodes to top X% by IMDb rating (TVMaze rating).
+ * Filter episodes to top X% by rating.
  * - If topPercent empty/null => 100% all videos
- * - No 7.5 threshold (dropped per user request)
- * - Simply sort by rating descending and take top pct%
+ * - Sort by rating descending and take top pct%
  * @param {Array} episodes TVmaze episodes
  * @param {number} topPercent 1-100
  */

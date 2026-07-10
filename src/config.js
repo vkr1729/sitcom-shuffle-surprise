@@ -1,4 +1,4 @@
-// src/config.js v4 - no AIO, universal only
+// src/config.js
 'use strict';
 
 function encodeConfig(config) {

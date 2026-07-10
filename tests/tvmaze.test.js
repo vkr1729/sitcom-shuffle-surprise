@@ -7,8 +7,8 @@ function makeEp(s, n, r, type = 'regular') {
   return { season: s, number: n, name: `S${s}E${n}`, type, rating: { average: r }, id: s * 100 + n };
 }
 
-describe('filterTopEpisodes no 7.5 filter', () => {
-  it('returns top 20% by rating only, no 7.5 threshold', () => {
+describe('filterTopEpisodes', () => {
+  it('returns top 20% by rating only', () => {
     const eps = [
       makeEp(1, 1, 6.0), makeEp(1, 2, 6.5), makeEp(1, 3, 7.0), makeEp(1, 4, 7.5),
       makeEp(1, 5, 8.0), makeEp(1, 6, 8.2), makeEp(1, 7, 8.5), makeEp(1, 8, 8.8),

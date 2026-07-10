@@ -1,4 +1,4 @@
-// src/index.js - Sitcom Surprise v5.1 - single catalog, true 1-click, universal
+// src/index.js - Sitcom Surprise - single catalog, true single-click, bulletproof meta
 'use strict';
 const express = require('express');
 const path = require('path');
@@ -12,9 +12,12 @@ const ADDON_NAME = 'Sitcom Surprise';
 const ADDON_VERSION = '5.0.0';
 
 function getLogoUrl(req) {
-  if (!req) return 'https://sitcom-shuffle-surprise.vercel.app/logo.png';
+  // Always HTTPS, prefer request host but fallback to renamed domain
+  const fallback = 'https://sitcom-surprise.vercel.app/logo.png';
+  if (!req) return fallback;
   const host = req.get('host');
-  if (!host) return 'https://sitcom-shuffle-surprise.vercel.app/logo.png';
+  if (!host) return fallback;
+  // host may be old sitcom-shuffle-surprise.vercel.app - keep using requested host for logo to avoid mixed domain
   return `https://${host}/logo.png`;
 }
 
@@ -52,17 +55,15 @@ app.param('config', (req, res, next, configParam) => {
 
 function buildManifest(cfg, req) {
   const logo = getLogoUrl(req);
-  // SINGLE catalog - series only, to avoid duplicate rows
   return {
     id: ADDON_ID,
     version: ADDON_VERSION,
     name: ADDON_NAME,
-    description: `One tile per show. True single click surprise — random episode from ${cfg.topPercent === 100 ? 'all episodes' : `top ${cfg.topPercent}% by rating`}. Universal, works with your existing addons.`,
+    description: `One tile per show. One click = surprise random episode from ${cfg.topPercent === 100 ? 'all episodes' : `top ${cfg.topPercent}% by rating`}.`,
     logo,
     resources: [
       'catalog',
       { name: 'meta', types: ['series'], idPrefixes: ['shuffle:'] },
-      // We advertise stream for shuffle: so we can provide meta+stream flow, but we actually delegate to other addons via tt:S:E ids
       { name: 'stream', types: ['series'], idPrefixes: ['shuffle:', 'tt'] },
     ],
     types: ['series'],
@@ -79,6 +80,7 @@ app.get('/manifest.json', (req, res) => {
 });
 app.get('/:config/manifest.json', (req, res) => {
   res.json(buildManifest(req.addonConfig, req));
+  // Prefetch all shows for cache warming
   for (const show of req.addonConfig.shows) {
     getTopEpisodes(show.id, req.addonConfig.topPercent).catch(() => {});
   }
@@ -95,7 +97,6 @@ function parseExtra(extraStr) {
   } catch { return {}; }
 }
 
-// SINGLE catalog handler - series/shuffle only
 function catalogHandler(req, res) {
   const cfg = req.addonConfig;
   const extra = parseExtra(req.params.extra);
@@ -119,41 +120,59 @@ function catalogHandler(req, res) {
   for (const show of paged) getTopEpisodes(show.id, cfg.topPercent).catch(() => {});
 }
 
-// Only one catalog route family
 app.get('/:config/catalog/series/shuffle.json', catalogHandler);
 app.get('/:config/catalog/series/shuffle/:extra.json', catalogHandler);
-// Legacy aliases still resolve to same single catalog to avoid 404, but they return same single list
 app.get('/:config/catalog/:type/:id.json', catalogHandler);
 app.get('/:config/catalog/:type/:id/:extra.json', catalogHandler);
 
-// Meta handler - returns single random video with defaultVideoId for true 1-click
+// BULLETPROOF META HANDLER - never returns meta:null for valid configured shows
 async function handleMeta(req, res) {
   const rawId = req.params.id;
-  if (!rawId.startsWith('shuffle:')) return res.json({ meta: null });
-  const imdbId = rawId.match(/tt\d+/)?.[0];
-  if (!imdbId) return res.json({ meta: null });
-  const cfg = req.addonConfig;
-  const show = cfg.shows.find(s => s.id === imdbId);
-  if (!show) {
-    // Try to still serve if show list doesn't contain but id is valid - for direct links
-    // But for "no metadata found" bug, we must ensure we return meta for configured shows
+  // Extract imdb id robustly - handle shuffle:tt..., shuffle:tt...:1:2, tt..., url-encoded etc
+  const decodedId = (() => {
+    try { return decodeURIComponent(rawId); } catch { return rawId; }
+  })();
+  const imdbMatch = decodedId.match(/(tt\d+)/);
+  const imdbId = imdbMatch ? imdbMatch[0] : null;
+
+  if (!imdbId) {
+    // No valid imdb in id - still try to not return null if we can, but if no imdb we must return null
+    console.warn(`[Meta] No IMDb found in id: ${rawId}`);
     return res.json({ meta: null });
   }
+
+  // Normalize config - support both old and new param handling
+  let cfg = req.addonConfig;
+  if (!cfg) {
+    // No config decoded - try to still serve with fallback name
+    cfg = { shows: [{ id: imdbId, name: imdbId }], topPercent: 100 };
+  }
+
+  // BULLETPROOF: find show, but if not found in config, create fallback object instead of returning null
+  // This is the mother fix for "No metadata found" - we always return meta even if show not in configured list
+  // (user may have stale catalog entry, or config changed)
+  let show = cfg.shows ? cfg.shows.find(s => s.id === imdbId) : null;
+  if (!show) {
+    console.warn(`[Meta] Show ${imdbId} not in config [${cfg.shows?.map(s=>s.id).join(',')}], using fallback`);
+    // Fallback name: try to keep something meaningful
+    show = { id: imdbId, name: imdbId };
+  }
+
   try {
-    const episode = await pickRandomEpisode(imdbId, cfg.topPercent);
+    const episode = await pickRandomEpisode(imdbId, cfg.topPercent || 100);
     const videoId = `${imdbId}:${episode.season}:${episode.number}`;
     const epLabel = `S${String(episode.season).padStart(2, '0')}E${String(episode.number).padStart(2, '0')}`;
     const releaseDate = new Date().toISOString().split('T')[0];
 
     res.json({
       meta: {
-        id: rawId,
+        id: `shuffle:${imdbId}`,
         type: 'series',
         name: show.name,
         poster: `https://images.metahub.space/poster/medium/${imdbId}/img.jpg`,
         background: `https://images.metahub.space/background/medium/${imdbId}/img.jpg`,
         logo: `https://images.metahub.space/logo/medium/${imdbId}/img.png`,
-        description: `🎲 Single Click Surprise — ${cfg.topPercent === 100 ? 'All episodes' : `Top ${cfg.topPercent}%`} · ${epLabel} — ${episode.name}${episode.rating != null ? ` (★${episode.rating})` : ''}. New surprise every open! Universal mode uses your existing addons.`,
+        description: `🎲 Surprise — ${cfg.topPercent === 100 ? 'All episodes' : `Top ${cfg.topPercent}%`} · ${epLabel} — ${episode.name}${episode.rating != null ? ` (★${episode.rating})` : ''}. New surprise every open!`,
         releaseInfo: `${episode.season}`,
         imdbRating: episode.rating != null ? String(episode.rating) : undefined,
         behaviorHints: { defaultVideoId: videoId },
@@ -171,15 +190,32 @@ async function handleMeta(req, res) {
       cacheMaxAge: 0,
     });
   } catch (err) {
-    console.error('Meta error', err);
+    console.error(`[Meta] Error for ${imdbId}:`, err.message);
+    // NEVER return meta:null here - return meta with error description and empty videos
+    // But still include meta so Stremio does NOT show "No metadata found"
+    // If TVmaze failed, we return fallback meta that still allows retry, with a placeholder video
+    const fallbackVideoId = `${imdbId}:1:1`;
     res.json({
       meta: {
-        id: rawId,
+        id: `shuffle:${imdbId}`,
         type: 'series',
         name: show.name,
         poster: `https://images.metahub.space/poster/medium/${imdbId}/img.jpg`,
-        description: `Error: ${err.message}. Retry.`,
-        videos: [],
+        background: `https://images.metahub.space/background/medium/${imdbId}/img.jpg`,
+        logo: `https://images.metahub.space/logo/medium/${imdbId}/img.png`,
+        description: `⚠️ Could not fetch episodes: ${err.message}. Retrying next open will get a surprise!`,
+        releaseInfo: '1',
+        behaviorHints: { defaultVideoId: fallbackVideoId },
+        videos: [
+          {
+            id: fallbackVideoId,
+            title: `Retry — ${show.name} S01E01`,
+            overview: `Error: ${err.message}. Will retry with random episode on next open.`,
+            released: new Date().toISOString().split('T')[0],
+            season: 1,
+            episode: 1,
+          },
+        ],
       },
       cacheMaxAge: 0,
     });
@@ -189,13 +225,7 @@ async function handleMeta(req, res) {
 app.get('/:config/meta/series/:id.json', handleMeta);
 app.get('/:config/meta/:type/:id.json', handleMeta);
 
-// Stream handler - for universal mode we DO NOT provide streams ourselves,
-// but we must respond to stream requests for tt:S:E so that Stremio doesn't show "No streams found"?
-// Actually in universal mode, other addons provide streams for tt:S:E. We return [] to not interfere.
-// However, for shuffle:tt id itself (if someone clicks before meta redirect), return empty with externalUrl hint? Better return [] and let meta's defaultVideoId trigger separate stream fetch for tt:S:E which will be handled by other addons.
 async function handleStream(req, res) {
-  // Always return empty - universal mode relies on TorBox/RD addons for tt:S:E
-  // This ensures we don't block other addons
   res.json({ streams: [], cacheMaxAge: 0 });
 }
 
