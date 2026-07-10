@@ -1,4 +1,0 @@
-- Status: DONE
-- Commits made: 88002c7
-- Test summary: ran `PORT=3000 node src/index.js & sleep 1; node --test tests/routes.test.js; kill %1` - pass: 2, fail: 0
-- Concerns or questions: None.

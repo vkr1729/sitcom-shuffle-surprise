@@ -7,3 +7,12 @@ dist
 .vercel
 .DS_Store
 coverage
+.lt
+tmp
+.agents/
+.claude.md
+.superpowers/
+implementation_plan.md
+success_criteria.md
+lt.log
+server.log
