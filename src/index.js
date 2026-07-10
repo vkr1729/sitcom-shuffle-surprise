@@ -1,4 +1,4 @@
-// src/index.js - Sitcom Shuffle: Single Click Surprise v4 - single catalog, true 1-click, no AIO
+// src/index.js - Sitcom Surprise v5.1 - single catalog, true 1-click, universal
 'use strict';
 const express = require('express');
 const path = require('path');
@@ -15,15 +15,6 @@ function getLogoUrl(req) {
   if (!req) return 'https://sitcom-shuffle-surprise.vercel.app/logo.png';
   const host = req.get('host');
   if (!host) return 'https://sitcom-shuffle-surprise.vercel.app/logo.png';
-  try {
-    // Try to serve local logo if exists, else fallback to placeholder - user will replace with Gemini logo
-    const fs = require('fs');
-    const path = require('path');
-    const logoPath = path.join(__dirname, '..', 'public', 'logo.png');
-    if (fs.existsSync(logoPath)) {
-      return `https://${host}/logo.png`;
-    }
-  } catch {}
   return `https://${host}/logo.png`;
 }
 
