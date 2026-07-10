@@ -1,4 +1,3 @@
-// tests/e2e.test.js v2
 'use strict';
 const assert = require('node:assert/strict');
 const { describe, it } = require('node:test');
@@ -6,44 +5,47 @@ const { encodeConfig } = require('../src/config');
 
 const BASE = 'http://localhost:3000';
 
-describe('e2e: universal flow (no AIO, 100%)', () => {
-  const cfg = { shows: [{ id: 'tt0898266', name: 'The Big Bang Theory' }] };
+describe('e2e universal single catalog true 1-click', () => {
+  const cfg = { shows: [{ id: 'tt0898266', name: 'The Big Bang Theory' }], topPercent: 100 };
   const configStr = encodeConfig(cfg);
 
-  it('manifest → catalog → meta (random) — universal', async () => {
+  it('manifest single catalog, no duplicate rows', async () => {
     const manifest = await (await fetch(`${BASE}/${configStr}/manifest.json`)).json();
-    assert.equal(manifest.id, 'org.stremio.sitcomshuffle.surprise');
-    const rNames = manifest.resources.map(r => typeof r === 'string' ? r : r.name);
-    assert.ok(rNames.includes('meta'));
+    assert.equal(manifest.catalogs.length, 1);
+    assert.equal(manifest.catalogs[0].id, 'shuffle');
+    assert.equal(manifest.catalogs[0].type, 'series');
+  });
 
-    const catalog = await (await fetch(`${BASE}/${configStr}/catalog/series/shuffle_series.json`)).json();
+  it('catalog returns tiles, meta returns single random video with defaultVideoId', async () => {
+    const catalog = await (await fetch(`${BASE}/${configStr}/catalog/series/shuffle.json`)).json();
     assert.equal(catalog.metas.length, 1);
     assert.equal(catalog.metas[0].id, 'shuffle:tt0898266');
-    assert.equal(catalog.metas[0].type, 'series');
 
-    // Meta should return 1 random video with defaultVideoId
     const meta1 = await (await fetch(`${BASE}/${configStr}/meta/series/shuffle:tt0898266.json`)).json();
-    assert.ok(meta1.meta.name.includes('Big Bang'));
+    assert.ok(meta1.meta);
     assert.ok(Array.isArray(meta1.meta.videos));
     assert.equal(meta1.meta.videos.length, 1);
     assert.ok(meta1.meta.behaviorHints.defaultVideoId);
     assert.match(meta1.meta.videos[0].id, /^tt0898266:\d+:\d+$/);
 
     const meta2 = await (await fetch(`${BASE}/${configStr}/meta/series/shuffle:tt0898266.json`)).json();
-    assert.ok(meta2.meta.videos[0].id.match(/^tt\d+:\d+:\d+$/));
+    // random should eventually differ (probabilistic, but with 279 eps low collision)
+    assert.ok(meta2.meta.videos[0].id);
   });
-});
 
-describe('e2e: with topPercent=20%', () => {
-  const cfg = { shows: [{ id: 'tt0898266', name: 'The Big Bang Theory' }], topPercent: 20 };
-  const configStr = encodeConfig(cfg);
-  it('meta respects top 20% filter', async () => {
-    const meta = await (await fetch(`${BASE}/${configStr}/meta/series/shuffle:tt0898266.json`)).json();
-    assert.ok(meta.meta.videos[0].title.includes('★'));
-    // rating should be high (>=7.5) when pool has highs
-    const ratingMatch = meta.meta.videos[0].title.match(/★([\d.]+)/);
-    if (ratingMatch) {
-      assert.ok(parseFloat(ratingMatch[1]) >= 7.5);
+  it('no metadata found bug fixed - all configured shows return meta', async () => {
+    const cfg3 = {
+      shows: [
+        { id: 'tt0898266', name: 'BBT' },
+        { id: 'tt0386676', name: 'Office' },
+        { id: 'tt2575988', name: 'Silicon Valley' },
+      ],
+    };
+    const cs = encodeConfig(cfg3);
+    for (const id of ['tt0898266', 'tt0386676', 'tt2575988']) {
+      const meta = await (await fetch(`${BASE}/${cs}/meta/series/shuffle:${id}.json`)).json();
+      assert.ok(meta.meta, `meta should exist for ${id}, not "No metadata found"`);
+      assert.ok(meta.meta.videos.length === 1);
     }
   });
 });

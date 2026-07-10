@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sitcom Shuffle: Single Click Surprise — Configure</title>
-  <meta name="description" content="One tile per show. One click = surprise random episode. Top % filter, persistent cache, universal mode.">
+  <meta name="description" content="One tile per show. One click = surprise random episode. Works with your existing Stremio addons.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
@@ -16,13 +16,13 @@
     <header class="hero">
       <div class="logo-wrap"><img src="logo.svg" alt="Logo" class="hero-logo"></div>
       <h1>🎲 Sitcom Shuffle:<br>Single Click Surprise</h1>
-      <p class="tagline">One tile. One click. Surprise random episode. No browsing, no picking.</p>
-      <p class="hint" style="max-width:640px;margin:10px auto 0">Universal — works with your existing Stremio addons (TorBox, Real Debrid, AIOStreams). Persistent 30-day cache per series, no lag after first load. Set Top % filter: default 20%, leave empty for 100% all episodes.</p>
+      <p class="tagline">One tile. One click. Surprise random episode. No browsing.</p>
+      <p class="hint" style="max-width:640px;margin:10px auto 0">Works with your existing Stremio addons (TorBox, Real Debrid, etc.). Persistent 30-day cache per series — load once, instant after. Top % filter: leave empty for 100% all episodes.</p>
     </header>
 
     <section class="card" id="search-section">
       <h2>1. Add TV Shows</h2>
-      <input type="search" id="search-input" placeholder="Search (e.g. Big Bang Theory)..." autocomplete="off">
+      <input type="search" id="search-input" placeholder="Search (e.g. Big Bang Theory, The Office)..." autocomplete="off">
       <div id="search-results" class="results-grid"></div>
     </section>
 
@@ -34,39 +34,28 @@
     </section>
 
     <section class="card" id="percent-section">
-      <h2>3. Top % Filter</h2>
-      <p class="hint">Default: Top 20% rated episodes (★≥7.5). Leave empty for 100% (all episodes random). Adjustable per your taste.</p>
+      <h2>3. Top % Filter (by IMDb rating)</h2>
+      <p class="hint">Pick from top rated. Example: Top 20% = best 20% episodes by rating. Leave empty for 100% (fully random from all episodes).</p>
       <div class="percent-row">
         <input type="range" id="percent-slider" min="1" max="100" value="20">
         <input type="number" id="percent-input" min="1" max="100" value="20" placeholder="20">
         <span>%</span>
         <button id="percent-clear" class="btn-small">100% (all)</button>
       </div>
-      <div class="percent-label"><span id="percent-desc">Top 20% rated — minimum 7.5★, then top 20%</span></div>
-    </section>
-
-    <section class="card" id="aio-section">
-      <h2>4. AIOStreams (Optional — for direct Chrome & celluloid play)</h2>
-      <p class="hint">Leave empty for universal mode (uses your existing Stremio addons). Paste AIO URL to enable built-in player & <code>/play</code> redirect for celluloid/mpv.</p>
-      <input type="url" id="aio-url" placeholder="Optional: https://aiostreams.elfhosted.com/.../manifest.json" autocomplete="off">
-      <p class="error" id="aio-error"></p>
+      <div class="percent-label"><span id="percent-desc">Top 20% — highest rated episodes</span></div>
     </section>
 
     <section class="card action-card" id="install-section">
-      <h2>5. Install Addon</h2>
+      <h2>4. Install Addon</h2>
       <button id="install-btn" class="btn-primary" disabled>Generate Install Link</button>
       <div id="install-output" class="install-output hidden">
-        <p>Addon ready! Install in Stremio:</p>
+        <p>Addon ready! One row in Stremio, one tile per show, single click surprise.</p>
         <a id="install-link" class="btn-install" href="#" target="_blank">🚀 Install in Stremio</a>
         <div class="url-box">
           <input type="text" id="install-url" readonly>
           <button id="copy-btn" class="btn-copy">Copy</button>
         </div>
-        <div class="url-box" style="margin-top:10px">
-          <input type="text" id="test-player-url" readonly placeholder="Player link (for Chrome / celluloid test)">
-          <button id="test-player-btn" class="btn-copy">Open Player</button>
-        </div>
-        <p class="hint" style="margin-top:12px">Hosting: Secure HTTPS (Vercel/Beamup/Cloudflare). Install URL works on https://web.stremio.com and desktop apps.</p>
+        <p class="hint" style="margin-top:12px">Secure HTTPS hosting (Vercel). Works on web.stremio.com and desktop.</p>
       </div>
     </section>
   </div>
