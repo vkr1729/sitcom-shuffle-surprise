@@ -1,19 +1,16 @@
 {
-  "name": "stremio-extension",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "directories": {
-    "doc": "docs"
-  },
+  "name": "sitcom-shuffle-surprise",
+  "version": "3.0.0",
+  "description": "Sitcom Shuffle: Single Click Surprise - one tile per show, true 1-click random episode, universal mode, persistent cache",
+  "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
     "dev": "node --watch src/index.js",
     "test": "node --test tests/*.test.js"
   },
-  "keywords": [],
+  "keywords": ["stremio", "addon", "shuffle", "sitcom"],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "type": "commonjs",
   "dependencies": {
     "express": "^5.2.1"
