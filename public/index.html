@@ -3,21 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sitcom Shuffle: Single Click Surprise — Configure</title>
+  <title>Sitcom Surprise — Configure</title>
   <meta name="description" content="One tile per show. One click = surprise random episode. Works with your existing Stremio addons.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
-  <link rel="icon" type="image/svg+xml" href="logo.svg">
-  <link rel="icon" type="image/png" href="logo.png">
 </head>
 <body>
   <div class="container">
     <header class="hero">
-      <div class="logo-wrap"><img src="logo.svg" alt="Logo" class="hero-logo"></div>
-      <h1>🎲 Sitcom Shuffle:<br>Single Click Surprise</h1>
-      <p class="tagline">One tile. One click. Surprise random episode. No browsing.</p>
-      <p class="hint" style="max-width:640px;margin:10px auto 0">Works with your existing Stremio addons (TorBox, Real Debrid, etc.). Persistent 30-day cache per series — load once, instant after. Top % filter: leave empty for 100% all episodes.</p>
+      <div class="logo-wrap" id="logo-wrap">
+        <!-- Logo placeholder - replace public/logo.png with your Gemini Nano Banana logo -->
+        <div class="logo-placeholder">🎁</div>
+      </div>
+      <h1>Sitcom Surprise</h1>
+      <p class="tagline">One tile. One click. Surprise episode.</p>
+      <p class="hint" style="max-width:640px;margin:10px auto 0">Works with your existing Stremio addons. Persistent 30-day cache — load once, instant after. Top % filter: leave empty for 100% all episodes.</p>
+      <p class="hint" style="max-width:640px;margin:8px auto 0;font-size:0.8rem;opacity:0.7">Drop your <code>logo.png</code> (512x512) into <code>public/</code> — it will be used automatically. Recommended: surprise gift box / TV / dice theme, no text.</p>
     </header>
 
     <section class="card" id="search-section">
@@ -35,7 +37,7 @@
 
     <section class="card" id="percent-section">
       <h2>3. Top % Filter (by IMDb rating)</h2>
-      <p class="hint">Pick from top rated. Example: Top 20% = best 20% episodes by rating. Leave empty for 100% (fully random from all episodes).</p>
+      <p class="hint">Top 20% = best 20% episodes by rating. Leave empty for 100% (fully random).</p>
       <div class="percent-row">
         <input type="range" id="percent-slider" min="1" max="100" value="20">
         <input type="number" id="percent-input" min="1" max="100" value="20" placeholder="20">
@@ -49,17 +51,29 @@
       <h2>4. Install Addon</h2>
       <button id="install-btn" class="btn-primary" disabled>Generate Install Link</button>
       <div id="install-output" class="install-output hidden">
-        <p>Addon ready! One row in Stremio, one tile per show, single click surprise.</p>
+        <p>Addon ready! Single row, single tile per show, single click surprise.</p>
         <a id="install-link" class="btn-install" href="#" target="_blank">🚀 Install in Stremio</a>
         <div class="url-box">
           <input type="text" id="install-url" readonly>
           <button id="copy-btn" class="btn-copy">Copy</button>
         </div>
-        <p class="hint" style="margin-top:12px">Secure HTTPS hosting (Vercel). Works on web.stremio.com and desktop.</p>
+        <p class="hint" style="margin-top:12px">Secure HTTPS (Vercel). Works on web.stremio.com and desktop.</p>
       </div>
     </section>
   </div>
 
+  <script>
+    // Try to load logo.png dynamically if user dropped it
+    (function(){
+      const wrap = document.getElementById('logo-wrap');
+      const img = new Image();
+      img.src = 'logo.png';
+      img.alt = 'Sitcom Surprise Logo';
+      img.className = 'hero-logo';
+      img.onload = () => { wrap.innerHTML = ''; wrap.appendChild(img); };
+      img.onerror = () => { /* keep emoji placeholder */ };
+    })();
+  </script>
   <script src="app.js"></script>
 </body>
 </html>

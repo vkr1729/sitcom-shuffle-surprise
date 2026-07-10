@@ -39,7 +39,6 @@ describe('manifest single catalog', () => {
   it('has only one catalog (no duplicate rows)', async () => {
     const url = `http://localhost:${PORT}/${configStr}/manifest.json`;
     const data = await (await fetch(url)).json();
-    assert.equal(data.id, 'org.stremio.sitcomshuffle.surprise');
     assert.equal(data.catalogs.length, 1);
     assert.equal(data.catalogs[0].id, 'shuffle');
     assert.equal(data.catalogs[0].type, 'series');

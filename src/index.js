@@ -7,13 +7,23 @@ const { pickRandomEpisode, getTopEpisodes } = require('./tvmaze');
 
 const app = express();
 
-const ADDON_ID = 'org.stremio.sitcomshuffle.surprise';
-const ADDON_NAME = 'Sitcom Shuffle: Single Click Surprise';
-const ADDON_VERSION = '4.0.0';
+const ADDON_ID = 'org.stremio.sitcomsurprise';
+const ADDON_NAME = 'Sitcom Surprise';
+const ADDON_VERSION = '5.0.0';
 
 function getLogoUrl(req) {
   if (!req) return 'https://sitcom-shuffle-surprise.vercel.app/logo.png';
   const host = req.get('host');
+  if (!host) return 'https://sitcom-shuffle-surprise.vercel.app/logo.png';
+  try {
+    // Try to serve local logo if exists, else fallback to placeholder - user will replace with Gemini logo
+    const fs = require('fs');
+    const path = require('path');
+    const logoPath = path.join(__dirname, '..', 'public', 'logo.png');
+    if (fs.existsSync(logoPath)) {
+      return `https://${host}/logo.png`;
+    }
+  } catch {}
   return `https://${host}/logo.png`;
 }
 
@@ -56,7 +66,7 @@ function buildManifest(cfg, req) {
     id: ADDON_ID,
     version: ADDON_VERSION,
     name: ADDON_NAME,
-    description: `One tile per show. True single click — surprise random episode from ${cfg.topPercent === 100 ? 'all episodes' : `top ${cfg.topPercent}%`}. No AIO needed.`,
+    description: `One tile per show. True single click surprise — random episode from ${cfg.topPercent === 100 ? 'all episodes' : `top ${cfg.topPercent}% by rating`}. Universal, works with your existing addons.`,
     logo,
     resources: [
       'catalog',

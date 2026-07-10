@@ -1,14 +1,14 @@
 {
-  "name": "sitcom-shuffle-surprise",
-  "version": "3.0.0",
-  "description": "Sitcom Shuffle: Single Click Surprise - one tile per show, true 1-click random episode, universal mode, persistent cache",
+  "name": "sitcom-surprise",
+  "version": "5.0.0",
+  "description": "Sitcom Surprise - one tile per show, true single click random episode, universal mode, persistent cache",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
     "dev": "node --watch src/index.js",
     "test": "node --test tests/*.test.js"
   },
-  "keywords": ["stremio", "addon", "shuffle", "sitcom"],
+  "keywords": ["stremio", "addon", "surprise", "sitcom", "shuffle", "random"],
   "author": "",
   "license": "MIT",
   "type": "commonjs",

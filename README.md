@@ -1,89 +1,56 @@
-# 🎲 Sitcom Shuffle: Single Click Surprise
+# 🎁 Sitcom Surprise
 
 One tile per TV show in Stremio. Single click → surprise random episode plays directly. No browsing, no picking.
 
-![Logo](public/logo.png)
+**Hosted securely at:** https://sitcom-shuffle-surprise.vercel.app *(will rename to sitcom-surprise after Vercel project update)*
 
-**Hosted securely at:** https://sitcom-shuffle-surprise.vercel.app
+> **Note:** Previously named "Sitcom Shuffle: Single Click Surprise" — renamed to **Sitcom Surprise** to avoid conflict with existing Sitcom Shuffle app. Logo placeholder: drop your Gemini Nano Banana `logo.png` (512x512) into `public/`.
 
 ## Features
 
-- **One Tile Per Show** — each series appears as one tile in Stremio
-- **True Single Click** — `defaultVideoId` makes Stremio jump directly to random episode, no season selector
-- **Configurable Top %** — default 20% top rated, leave empty for 100% all episodes (per requirement)
-- **Universal — No AIO Required** — works with your existing TorBox, Real-Debrid, AIOStreams installations
-- **Persistent Cache** — episodes fetched once per series from TVmaze, cached 30 days on disk + memory (`~/.cache/sitcom-shuffle/episodes.json`), instant random picks (<1ms)
-- **Amazing Logo** — dice inside TV + gift box surprise theme, NOT a series logo
+- **One Tile Per Show** — each series is one tile, single row in Stremio (no duplicate Movie/Series rows)
+- **True Single Click** — `defaultVideoId` makes Stremio jump directly to random episode's streams from your existing addons
+- **Top % Filter** — leave empty for 100% all episodes, or set 1-100% by IMDb rating (no 7.5 threshold)
+- **Universal — No AIO** — works with whatever you already have (TorBox, Real-Debrid, etc.)
+- **Persistent Cache** — episodes fetched once per series from TVmaze, cached 30 days (`~/.cache/sitcom-shuffle/episodes.json`), instant random after
+- **Logo:** Replace `public/logo.png` with your Gemini Nano Banana artwork (gift box surprise theme recommended)
 
-## Quick Start (Big Bang Theory)
+## Quick Start
 
-Universal (all episodes):
-```
-https://sitcom-shuffle-surprise.vercel.app/eyJzaG93cyI6W3siaWQiOiJ0dDA4OTgyNjYiLCJuYW1lIjoiVGhlIEJpZyBCYW5nIFRoZW9yeSJ9XX0/manifest.json
-```
+Configurator: https://sitcom-shuffle-surprise.vercel.app/configure/
 
-Top 20% rated (your original criteria):
-```
-https://sitcom-shuffle-surprise.vercel.app/eyJzaG93cyI6W3siaWQiOiJ0dDA4OTgyNjYiLCJuYW1lIjoiVGhlIEJpZyBCYW5nIFRoZW9yeSJ9XSwidG9wUGVyY2VudCI6MjB9/manifest.json
-```
+1. Search and add shows (e.g. Big Bang Theory)
+2. Set Top % (default 20%, empty = 100% all)
+3. Generate install link → Install in Stremio Web or App
 
-- **Configurator:** https://sitcom-shuffle-surprise.vercel.app/configure/
-- **Stremio Web Install:** `https://web.stremio.com/#/addons?addon=<encoded manifest url>`
-- **Stremio App:** Paste `stremio://sitcom-shuffle-surprise.vercel.app/.../manifest.json`
+## Hosting
 
-## How It Works
-
-1. Catalog returns one `series` tile per show: `shuffle:tt0898266`
-2. Meta handler picks random episode from persistent cache: returns single video `tt0898266:S:E` + `behaviorHints.defaultVideoId`
-3. Stremio sees `defaultVideoId` and jumps directly to that video's streams from *your other installed addons* (TorBox, etc.) → one click play
-4. `cacheMaxAge: 0` ensures new random on every tile open
-
-## Endpoints
-
-- `/:config/manifest.json` — manifest with themed dice logo (HTTPS)
-- `/:config/catalog/series/shuffle_series.json` — one tile per show
-- `/:config/meta/series/shuffle:ttXXX.json` — single random video + defaultVideoId
-- `/:config/player/shuffle:ttXXX` — direct HTML5 player (requires AIO), playable in Chrome, copy URL for celluloid/mpv
-- `/:config/play/shuffle:ttXXX?format=json` — returns stream URL for `celluloid` or `mpv`
-
-## Celluloid / MPV Direct Play
-
-With AIO configured:
-```bash
-# Get direct URL
-curl "https://sitcom-shuffle-surprise.vercel.app/<config>/play/shuffle:tt0898266?format=json" | jq -r .url
-# Play in celluloid
-celluloid $(curl -s ... | jq -r .url)
-# Or mpv
-mpv $(curl -s ... | jq -r .url)
-```
-
-Universal mode: video ID `tt0898266:S:E` is returned, use your Stremio addons or player endpoint which shows video ID.
+- **Vercel:** HTTPS auto, current `sitcom-shuffle-surprise.vercel.app`
+- Custom domain suggestion: `sitcom-surprise.vercel.app` (rename project in Vercel dashboard)
+- Also supports: Beamup, Cloudflare Workers, Render/Fly
 
 ## Development
 
 ```bash
 npm install
 npm run dev
-npm test   # 22 tests pass
+npm test   # 16 tests
 ```
 
-## Secure Hosting
+Drop your logo: `public/logo.png` (512x512 PNG). Server will serve it automatically.
 
-- **Vercel (current):** https://sitcom-shuffle-surprise.vercel.app — free, HTTPS auto, managed TLS, DDoS protection
-- **Beamup (Stremio):** `a.baby-beamup.club` — free, designed for Stremio addons, HTTPS
-- **Cloudflare Workers:** free 100k req/day, edge cache, KV for persistent cache
-- **Render / Fly / Railway:** all support Node + Express + PORT env, free HTTPS
+## How Single Click Works
 
-Repo: https://github.com/vkr1729/sitcom-shuffle-surprise
+1. Catalog returns tiles: `shuffle:ttXXX`
+2. Meta handler picks random episode from cache → returns single video `tt:S:E` + `behaviorHints.defaultVideoId`
+3. Stremio auto-opens that video and calls `stream/series/tt:S:E.json` on all your other addons → streams ready
+4. `cacheMaxAge:0` ensures new surprise every open
 
-## Top % Filter Logic
+## Success Criteria
 
-- If not populated → 100% all episodes (per your requirement)
-- 20% (default in UI) → filter ≥7.5★, then top 20% by rating
-- 100% → include all regular episodes including unrated, sorted by rating desc
-- Configurable via slider 1-100 or clear to all
-
-## License
+- 3 series → 3 tiles, single row
+- Click tile → no "No metadata found", goes directly to random episode player (using your TorBox etc)
+- No AIO config, no 7.5 filter
+- Logo placeholder ready for Gemini image
 
 MIT
