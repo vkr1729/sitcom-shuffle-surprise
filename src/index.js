@@ -2,7 +2,6 @@
 'use strict';
 const express = require('express');
 const path = require('path');
-const fs = require('fs');
 const { decodeConfig } = require('./config');
 const { pickRandomEpisode, getTopEpisodes } = require('./tvmaze');
 
@@ -12,25 +11,17 @@ const ADDON_ID = 'org.stremio.sitcomshuffle.surprise';
 const ADDON_NAME = 'Sitcom Shuffle: Single Click Surprise';
 const ADDON_VERSION = '3.0.0';
 
-// Default logo - use hosted SVG/PNG with fallback to generated dice logo
-// This logo is a dice inside TV with gift box — reflects surprise theme, NOT a series logo
-function getDefaultLogo(req) {
-  const host = req ? `${req.protocol}://${req.get('host')}` : '';
-  // Prefer local hosted logo if we have host, else fallback to clear icon
-  if (host) {
-    return `${host}/logo.png`;
-  }
-  // Fallback for manifest without req context
-  return 'https://raw.githubusercontent.com/vkr1729/sitcom-shuffle/main/public/logo.png'; // placeholder, will be replaced by vercel URL after deploy
+function getLogoUrl(req) {
+  if (!req) return 'https://sitcom-shuffle-surprise.vercel.app/logo.png';
+  const host = req.get('host');
+  const proto = req.get('x-forwarded-proto') || req.protocol || 'https';
+  // Always force https for Stremio Web compliance
+  const secureProto = 'https';
+  return `${secureProto}://${host}/logo.png`;
 }
 
 app.use((req, res, next) => {
-  const start = Date.now();
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-  res.on('finish', () => {
-    const elapsed = Date.now() - start;
-    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} → ${res.statusCode} (${elapsed}ms)`);
-  });
   next();
 });
 
@@ -42,12 +33,9 @@ app.use((req, res, next) => {
 });
 
 app.use('/configure', express.static(path.join(__dirname, '..', 'public')));
-app.use('/logo.png', (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'logo.png')));
-app.use('/logo.svg', (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'logo.svg')));
 app.use(express.static(path.join(__dirname, '..', 'public')));
 app.get('/', (req, res) => res.redirect('/configure'));
 
-// Config param middleware
 app.param('config', (req, res, next, configParam) => {
   if (configParam === 'default' || configParam === 'manifest.json') {
     req.addonConfig = {
@@ -66,9 +54,7 @@ app.param('config', (req, res, next, configParam) => {
 });
 
 function buildManifest(cfg, req) {
-  const host = req ? `${req.protocol}://${req.get('host')}` : '';
-  const logo = host ? `${host}/logo.png` : getDefaultLogo(req);
-
+  const logo = getLogoUrl(req);
   const hasAio = !!cfg.aio;
   const topLabel = cfg.topPercent === 100 ? 'all episodes' : `top ${cfg.topPercent}%`;
 
@@ -78,7 +64,6 @@ function buildManifest(cfg, req) {
     { name: 'stream', types: ['series', 'movie'], idPrefixes: ['shuffle:'] },
   ];
   if (hasAio) {
-    // also handle tt ids when AIO present
     resources[2] = { name: 'stream', types: ['series', 'movie'], idPrefixes: ['shuffle:', 'tt'] };
   }
 
@@ -86,7 +71,7 @@ function buildManifest(cfg, req) {
     id: ADDON_ID,
     version: ADDON_VERSION,
     name: ADDON_NAME,
-    description: `One tile per show. One click = surprise random episode from ${topLabel}. Uses your existing Stremio addons. No browsing, no picking. Top ${cfg.topPercent}% filter, persistent cache, universal mode.`,
+    description: `One tile per show. One click = surprise random episode from ${topLabel}. Uses your existing Stremio addons. No browsing, no picking.`,
     logo,
     resources,
     types: ['series', 'movie'],
@@ -99,7 +84,6 @@ function buildManifest(cfg, req) {
   };
 }
 
-// Manifest routes
 app.get('/manifest.json', (req, res) => {
   res.json(buildManifest({ shows: [{ id: 'tt0898266', name: 'The Big Bang Theory' }], topPercent: 100, aio: null }, req));
 });
@@ -364,7 +348,6 @@ app.get('/:config/play/:id', async (req, res) => {
   }
 });
 
-// Persistent cache preload
 try {
   const { _loadFileCache } = require('./tvmaze');
   _loadFileCache();

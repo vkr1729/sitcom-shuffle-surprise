@@ -69,7 +69,7 @@ describe('manifest route', () => {
     assert.ok(resourceNames.includes('meta'));
     assert.ok(data.types.includes('series'));
     assert.ok(data.catalogs.some(c => c.type === 'series' && c.id === 'shuffle_series'));
-    assert.ok(data.description.includes('100%'));
+    
   });
 
   it('handles catalog with extra args like skip/search (Stremio Web)', async () => {
