@@ -1,0 +1,10 @@
+node_modules
+.git
+cache
+*.log
+.env
+.superpowers
+.agents
+tests
+docs
+coverage

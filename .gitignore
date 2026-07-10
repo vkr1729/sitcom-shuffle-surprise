@@ -1,8 +1,9 @@
-# AI Agent Workflows State
-.claude.md
-.agents/
-implementation_plan.md
-success_criteria.md
-.plan_state.json
-.bugfix_plan.md
-.superpowers/
+node_modules
+cache
+.cache
+*.log
+.env
+dist
+.vercel
+.DS_Store
+coverage

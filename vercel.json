@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "builds": [
+    { "src": "src/index.js", "use": "@vercel/node" }
+  ],
+  "routes": [
+    { "src": "/logo.png", "dest": "/public/logo.png" },
+    { "src": "/logo.svg", "dest": "/public/logo.svg" },
+    { "src": "/configure", "dest": "/public/index.html" },
+    { "src": "/configure/(.*)", "dest": "/public/$1" },
+    { "src": "/(.*)", "dest": "/src/index.js" }
+  ]
+}
