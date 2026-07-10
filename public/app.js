@@ -1,4 +1,4 @@
-// public/app.js v4 - no AIO
+// public/app.js v5 - Sitcom Surprise - no AIO, default examples
 'use strict';
 (function () {
   const searchInput = document.getElementById('search-input');
@@ -19,55 +19,40 @@
   let topPercent = 20;
   let topPercentIsAll = false;
 
+  // Default examples so configurator doesn't look empty
+  const DEFAULT_SHOWS = [
+    { id: 'tt0898266', name: 'The Big Bang Theory', poster: 'https://images.metahub.space/poster/medium/tt0898266/img.jpg' },
+    { id: 'tt2575988', name: 'Silicon Valley', poster: 'https://images.metahub.space/poster/medium/tt2575988/img.jpg' },
+    { id: 'tt0108778', name: 'Friends', poster: 'https://images.metahub.space/poster/medium/tt0108778/img.jpg' },
+  ];
+
   function updatePercentDesc() {
     if (topPercentIsAll || topPercent === 100) {
       percentDesc.textContent = '100% — all episodes, fully random';
       return;
     }
-    if (topPercent >= 50) {
-      percentDesc.textContent = `Top ${topPercent}% — wide selection by rating`;
-    } else if (topPercent >= 20) {
-      percentDesc.textContent = `Top ${topPercent}% — highest rated episodes`;
-    } else {
-      percentDesc.textContent = `Top ${topPercent}% — only the very best`;
-    }
+    if (topPercent >= 50) percentDesc.textContent = `Top ${topPercent}% — wide selection by rating`;
+    else if (topPercent >= 20) percentDesc.textContent = `Top ${topPercent}% — highest rated episodes`;
+    else percentDesc.textContent = `Top ${topPercent}% — only the very best`;
   }
 
   function setTopPercent(v, isAllFlag = false) {
     if (isAllFlag) {
-      topPercentIsAll = true;
-      topPercent = 100;
-      percentSlider.value = 100;
-      percentInput.value = '';
-      percentInput.placeholder = 'all (100)';
-      updatePercentDesc();
-      updateInstallBtn();
-      return;
+      topPercentIsAll = true; topPercent = 100;
+      percentSlider.value = 100; percentInput.value = ''; percentInput.placeholder = 'all (100)';
+      updatePercentDesc(); updateInstallBtn(); return;
     }
     topPercentIsAll = false;
     let num = parseInt(v, 10);
-    if (isNaN(num) || v === '' || v == null) {
-      topPercent = 100;
-      percentInput.placeholder = '100';
-    } else {
-      topPercent = Math.max(1, Math.min(100, num));
-    }
+    if (isNaN(num) || v === '' || v == null) { topPercent = 100; percentInput.placeholder = '100'; }
+    else topPercent = Math.max(1, Math.min(100, num));
     percentSlider.value = topPercent;
     if (document.activeElement !== percentInput) percentInput.value = topPercent === 100 && v === '' ? '' : topPercent;
-    updatePercentDesc();
-    updateInstallBtn();
+    updatePercentDesc(); updateInstallBtn();
   }
 
-  percentSlider.addEventListener('input', (e) => {
-    topPercentIsAll = false;
-    setTopPercent(e.target.value);
-    percentInput.value = e.target.value;
-  });
-  percentInput.addEventListener('input', (e) => {
-    const val = e.target.value.trim();
-    if (val === '') { setTopPercent(100); return; }
-    setTopPercent(val);
-  });
+  percentSlider.addEventListener('input', (e) => { topPercentIsAll = false; setTopPercent(e.target.value); percentInput.value = e.target.value; });
+  percentInput.addEventListener('input', (e) => { const val = e.target.value.trim(); if (val === '') { setTopPercent(100); return; } setTopPercent(val); });
   percentClearBtn.addEventListener('click', () => setTopPercent(null, true));
   updatePercentDesc();
 
@@ -84,67 +69,44 @@
       const res = await fetch(`https://api.tvmaze.com/search/shows?q=${encodeURIComponent(query)}`);
       const data = await res.json();
       renderSearchResults(data);
-    } catch {
-      searchResults.innerHTML = '<p class="error">Search failed. Please try again.</p>';
-    }
+    } catch { searchResults.innerHTML = '<p class="error">Search failed. Please try again.</p>'; }
   }
 
   function renderSearchResults(results) {
-    searchResults.innerHTML = results
-      .filter(r => r.show && r.show.externals && r.show.externals.imdb)
-      .slice(0, 12)
-      .map(r => {
-        const show = r.show;
-        const imdbId = show.externals.imdb;
-        const poster = show.image ? show.image.medium : '';
-        const year = show.premiered ? show.premiered.slice(0, 4) : '?';
-        const isAdded = favorites.has(imdbId);
-        const safeName = escapeHtml(show.name);
-        const safePoster = poster.replace(/'/g, '%27');
-        return `
-          <div class="show-card ${isAdded ? 'added' : ''}" data-id="${imdbId}">
-            <div class="poster-wrap">
-              ${poster ? `<img src="${poster}" alt="${safeName}" loading="lazy">` : '<div class="no-poster">No Image</div>'}
-            </div>
-            <div class="show-info">
-              <span class="show-title">${safeName}</span>
-              <span class="show-year">${year}</span>
-            </div>
-            <button class="btn-add" onclick="window.__addShow('${imdbId}', '${safeName.replace(/'/g, "\\'")}', '${safePoster}')">
-              ${isAdded ? '✓ Added' : '+ Add'}
-            </button>
-          </div>
-        `;
-      }).join('');
+    searchResults.innerHTML = results.filter(r => r.show && r.show.externals && r.show.externals.imdb).slice(0, 12).map(r => {
+      const show = r.show; const imdbId = show.externals.imdb; const poster = show.image ? show.image.medium : '';
+      const year = show.premiered ? show.premiered.slice(0, 4) : '?'; const isAdded = favorites.has(imdbId);
+      const safeName = escapeHtml(show.name); const safePoster = poster.replace(/'/g, '%27');
+      return `
+        <div class="show-card ${isAdded ? 'added' : ''}" data-id="${imdbId}">
+          <div class="poster-wrap">${poster ? `<img src="${poster}" alt="${safeName}" loading="lazy">` : '<div class="no-poster">No Image</div>'}</div>
+          <div class="show-info"><span class="show-title">${safeName}</span><span class="show-year">${year}</span></div>
+          <button class="btn-add" onclick="window.__addShow('${imdbId}', '${safeName.replace(/'/g, "\\'")}', '${safePoster}')">${isAdded ? '✓ Added' : '+ Add'}</button>
+        </div>`;
+    }).join('');
   }
 
   window.__addShow = function (id, name, poster) {
     if (favorites.has(id)) favorites.delete(id);
     else favorites.set(id, { id, name, poster });
     renderFavorites();
-    const q = searchInput.value.trim();
-    if (q.length >= 2) searchShows(q);
+    const q = searchInput.value.trim(); if (q.length >= 2) searchShows(q);
     updateInstallBtn();
   };
 
   function renderFavorites() {
     if (favorites.size === 0) {
-      favoritesList.innerHTML = '<p class="empty-state">No shows yet. Search above!</p>';
-      showCount.textContent = '0';
-      return;
+      favoritesList.innerHTML = '<p class="empty-state">No shows yet. Search above to add your favorites!<br><span style="font-size:0.85rem;opacity:0.8">Examples: Big Bang Theory, Silicon Valley, Friends — added by default, delete if you don\'t need them.</span></p>';
+      showCount.textContent = '0'; return;
     }
     showCount.textContent = favorites.size;
     favoritesList.innerHTML = Array.from(favorites.values()).map(show => `
-        <div class="show-card favorite" data-id="${show.id}">
-          <div class="poster-wrap">
-            ${show.poster ? `<img src="${show.poster}" alt="${escapeHtml(show.name)}" loading="lazy">` : '<div class="no-poster">No Image</div>'}
-          </div>
-          <div class="show-info">
-            <span class="show-title">${escapeHtml(show.name)}</span>
-          </div>
-          <button class="btn-remove" onclick="window.__addShow('${show.id}', '${escapeHtml(show.name).replace(/'/g, "\\'")}', '${show.poster}')">✕ Remove</button>
-        </div>
-      `).join('');
+      <div class="show-card favorite" data-id="${show.id}">
+        <div class="poster-wrap">${show.poster ? `<img src="${show.poster}" alt="${escapeHtml(show.name)}" loading="lazy">` : '<div class="no-poster">No Image</div>'}</div>
+        <div class="show-info"><span class="show-title">${escapeHtml(show.name)}</span></div>
+        <button class="btn-remove" onclick="window.__addShow('${show.id}', '${escapeHtml(show.name).replace(/'/g, "\\'")}', '${show.poster}')">✕ Remove</button>
+      </div>`).join('') +
+      '<p class="hint" style="grid-column:1/-1;text-align:center;margin-top:0.5rem">Examples added by default — delete any you don\'t need.</p>';
   }
 
   function updateInstallBtn() {
@@ -155,28 +117,27 @@
 
   installBtn.addEventListener('click', () => {
     if (favorites.size === 0) return;
-    const config = {
-      shows: Array.from(favorites.values()).map(s => ({ id: s.id, name: s.name })),
-      topPercent: topPercentIsAll ? 100 : topPercent,
-    };
+    const config = { shows: Array.from(favorites.values()).map(s => ({ id: s.id, name: s.name })), topPercent: topPercentIsAll ? 100 : topPercent };
     const encoded = btoa(JSON.stringify(config)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
     const base = window.location.origin;
     const manifestUrl = `${base}/${encoded}/manifest.json`;
     const stremioUrl = `stremio://${base.replace(/^https?:\/\//, '')}/${encoded}/manifest.json`;
-    installLink.href = stremioUrl;
-    installUrl.value = manifestUrl;
+    installLink.href = stremioUrl; installUrl.value = manifestUrl;
     installOutput.classList.remove('hidden');
   });
 
   copyBtn.addEventListener('click', () => {
-    installUrl.select();
-    navigator.clipboard.writeText(installUrl.value);
-    copyBtn.textContent = '✓ Copied';
-    setTimeout(() => copyBtn.textContent = 'Copy', 2000);
+    installUrl.select(); navigator.clipboard.writeText(installUrl.value);
+    copyBtn.textContent = '✓ Copied'; setTimeout(() => copyBtn.textContent = 'Copy', 2000);
   });
 
-  function escapeHtml(str) {
-    if (!str) return '';
-    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
-  }
+  function escapeHtml(str) { if (!str) return ''; return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;'); }
+
+  // Load default examples if empty
+  (function loadDefaults() {
+    if (favorites.size === 0) {
+      for (const s of DEFAULT_SHOWS) favorites.set(s.id, s);
+      renderFavorites(); updateInstallBtn();
+    }
+  })();
 })();

@@ -8,18 +8,16 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <link rel="icon" type="image/png" href="logo.png">
 </head>
 <body>
   <div class="container">
     <header class="hero">
-      <div class="logo-wrap" id="logo-wrap">
-        <!-- Logo placeholder - replace public/logo.png with your Gemini Nano Banana logo -->
-        <div class="logo-placeholder">🎁</div>
-      </div>
+      <div class="logo-wrap" id="logo-wrap"><div class="logo-placeholder">🎁</div></div>
       <h1>Sitcom Surprise</h1>
       <p class="tagline">One tile. One click. Surprise episode.</p>
-      <p class="hint" style="max-width:640px;margin:10px auto 0">Works with your existing Stremio addons. Persistent 30-day cache — load once, instant after. Top % filter: leave empty for 100% all episodes.</p>
-      <p class="hint" style="max-width:640px;margin:8px auto 0;font-size:0.8rem;opacity:0.7">Drop your <code>logo.png</code> (512x512) into <code>public/</code> — it will be used automatically. Recommended: surprise gift box / TV / dice theme, no text.</p>
+      <p class="hint" style="max-width:640px;margin:10px auto 0">Works with your existing Stremio addons (TorBox, Real Debrid, etc.). Persistent 30-day cache — load once, instant after. Top % filter: leave empty for 100% all episodes.</p>
+      <p class="hint" style="max-width:640px;margin:8px auto 0;font-size:0.85rem;opacity:0.8">Examples (Big Bang Theory, Silicon Valley, Friends) added by default — delete if you don't need them.</p>
     </header>
 
     <section class="card" id="search-section">
@@ -31,7 +29,7 @@
     <section class="card" id="favorites-section">
       <h2>2. My Surprise List <span class="badge" id="show-count">0</span></h2>
       <div id="favorites-list" class="favorites-grid">
-        <p class="empty-state" id="empty-state">No shows yet. Search above!</p>
+        <p class="empty-state">Loading examples...</p>
       </div>
     </section>
 
@@ -63,15 +61,13 @@
   </div>
 
   <script>
-    // Try to load logo.png dynamically if user dropped it
     (function(){
       const wrap = document.getElementById('logo-wrap');
       const img = new Image();
       img.src = 'logo.png';
-      img.alt = 'Sitcom Surprise Logo';
+      img.alt = 'Sitcom Surprise';
       img.className = 'hero-logo';
       img.onload = () => { wrap.innerHTML = ''; wrap.appendChild(img); };
-      img.onerror = () => { /* keep emoji placeholder */ };
     })();
   </script>
   <script src="app.js"></script>
