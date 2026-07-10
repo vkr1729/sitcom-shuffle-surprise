@@ -10,7 +10,7 @@ function makeEp(s, n, r, type = 'regular') {
 describe('filterTopEpisodes', () => {
   it('returns top 20% by rating only', () => {
     const eps = [
-      makeEp(1, 1, 6.0), makeEp(1, 2, 6.5), makeEp(1, 3, 7.0), makeEp(1, 4, 7.5),
+      makeEp(1, 1, 6.0), makeEp(1, 2, 6.5), makeEp(1, 3, 7.0), makeEp(1, 4, 7.2),
       makeEp(1, 5, 8.0), makeEp(1, 6, 8.2), makeEp(1, 7, 8.5), makeEp(1, 8, 8.8),
       makeEp(1, 9, 9.0), makeEp(1, 10, 9.5),
     ];
